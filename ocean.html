@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>听听大海的声音</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1c92d2, #0575E6);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .ocean-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: white;
+        }
+
+        .title {
+            font-size: 2rem;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .sound-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
+        }
+
+        .sound-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .sound-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .sound-card img {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 10px;
+        }
+
+        .sound-card h3 {
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 15px 30px;
+            border-radius: 50px;
+        }
+
+        .control-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 1.2rem;
+            padding: 10px;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .message {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 30px;
+            border-radius: 50px;
+            color: #1c92d2;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="message">不开心的时候，听听大海的声音吧 ❤️</div>
+    
+    <div class="ocean-container">
+        <h1 class="title">海洋音效</h1>
+        <div class="sound-grid">
+            <div class="sound-card" data-sound="calm-sea">
+                <img src="./img/wave.png" alt="平静的海">
+                <h3>平静的海</h3>
+            </div>
+            <div class="sound-card" data-sound="storm">
+                <img src="./img/storm.png" alt="风暴">
+                <h3>海洋风暴</h3>
+            </div>
+            <div class="sound-card" data-sound="seagull">
+                <img src="./img/seagull.png" alt="海鸥">
+                <h3>海鸥鸣叫</h3>
+            </div>
+            <div class="sound-card" data-sound="underwater">
+                <img src="./img/underwater.png" alt="水下">
+                <h3>水下世界</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls">
+        <button class="control-btn" id="muteBtn">🔇</button>
+        <button class="control-btn" id="volumeDownBtn">🔉</button>
+        <button class="control-btn" id="volumeUpBtn">🔊</button>
+    </div>
+
+    <script>
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        let currentSound = null;
+        let gainNode = null;
+
+        const sounds = {
+            'calm-sea': './sounds/calm-sea.mp3',
+            'storm': './sounds/storm.mp3',
+            'seagull': './sounds/seagull.mp3',
+            'underwater': './sounds/underwater.mp3'
+        };
+
+        async function playSound(soundName) {
+            if (currentSound) {
+                currentSound.stop();
+            }
+
+            try {
+                const response = await fetch(sounds[soundName]);
+                const arrayBuffer = await response.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+                currentSound = audioContext.createBufferSource();
+                gainNode = audioContext.createGain();
+
+                currentSound.buffer = audioBuffer;
+                currentSound.loop = true;
+                currentSound.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                currentSound.start();
+            } catch (error) {
+                console.error('Error loading sound:', error);
+            }
+        }
+
+        document.querySelectorAll('.sound-card').forEach(card => {
+            card.addEventListener('click', () => {
+                const soundName = card.dataset.sound;
+                playSound(soundName);
+            });
+        });
+
+        // 音量控制
+        document.getElementById('muteBtn').addEventListener('click', () => {
+            if (gainNode) {
+                gainNode.gain.value = gainNode.gain.value === 0 ? 1 : 0;
+            }
+        });
+
+        document.getElementById('volumeDownBtn').addEventListener('click', () => {
+            if (gainNode && gainNode.gain.value > 0) {
+                gainNode.gain.value = Math.max(0, gainNode.gain.value - 0.1);
+            }
+        });
+
+        document.getElementById('volumeUpBtn').addEventListener('click', () => {
+            if (gainNode) {
+                gainNode.gain.value = Math.min(1, gainNode.gain.value + 0.1);
+            }
+        });
+    </script>
+</body>
+</html> 

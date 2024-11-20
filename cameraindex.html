@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拍立得相机动画</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="gallery"></div>
+    <div class="camera">
+        <div class="flash"></div>
+        <div class="lens"></div>
+        <div class="picture"></div>
+        <div class="btn-guide"></div>
+        <button class="shutter-btn"></button>
+    </div>
+
+    <audio id="shutterSound" src="music/shutter.mp3"></audio>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const gallery = document.querySelector('.gallery');
+            const camera = document.querySelector('.camera');
+            const shutterBtn = document.querySelector('.shutter-btn');
+            const shutterSound = document.getElementById('shutterSound');
+            const flash = document.querySelector('.flash');
+            let currentIndex = 0;
+            const images = ['img/1.jpg', 'img/2.jpg', 'img/3.jpg', 'img/4.jpg', 'img/5.jpg'];
+            
+            // 初始状态下移除动画
+            camera.classList.add('paused');
+            
+            shutterBtn.addEventListener('click', function() {
+                if (!camera.classList.contains('clicked')) {
+                    camera.classList.add('clicked');
+                }
+                
+                if (currentIndex >= images.length) {
+                    alert('胶片已用完 让老公给你买');
+                    return;
+                }
+                
+                // 播放快门声
+                shutterSound.play();
+                
+                // 闪光灯效果
+                flash.classList.add('active');
+                setTimeout(() => flash.classList.remove('active'), 200);
+                
+                // 添加打印动画
+                camera.classList.remove('paused');
+                
+                // 创建照片展示
+                const item = document.createElement('div');
+                item.className = 'gallery-item';
+                item.style.backgroundImage = `url('${images[currentIndex]}')`;
+                gallery.appendChild(item);
+                currentIndex++;
+                
+                // 3秒后暂停动画等待下次点击
+                setTimeout(() => {
+                    camera.classList.add('paused');
+                }, 3000);
+            });
+        });
+    </script>
+</body>
+</html>
